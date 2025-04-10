@@ -43,7 +43,9 @@ class SeasonCard extends StatelessWidget {
             width: 100,
             height: 150,
             child: CachedNetworkImage(
-              imageUrl: "https://image.tmdb.org/t/p/w500${season.posterPath}",
+              imageUrl: season.posterPath != ''
+                  ? "https://image.tmdb.org/t/p/w500${season.posterPath}"
+                  : 'https://media.istockphoto.com/id/1222357475/vector/image-preview-icon-picture-placeholder-for-website-or-ui-ux-design-vector-illustration.jpg?s=612x612&w=0&k=20&c=KuCo-dRBYV7nz2gbk4J9w1WtTAgpTdznHu55W9FjimE=',
               fit: BoxFit.cover,
               placeholder: (context, url) => const CircularProgressIndicator(),
             ),

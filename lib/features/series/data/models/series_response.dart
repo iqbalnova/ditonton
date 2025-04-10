@@ -7,9 +7,9 @@ class SeriesResponse extends Equatable {
   SeriesResponse({required this.seriesList});
 
   factory SeriesResponse.fromJson(Map<String, dynamic> json) => SeriesResponse(
-        seriesList: List<SeriesModel>.from((json["results"] as List)
-            .map((x) => SeriesModel.fromJson(x))
-            .where((element) => element.posterPath != null)),
+        seriesList: List<SeriesModel>.from(
+          (json["results"] as List).map((x) => SeriesModel.fromJson(x)),
+        ),
       );
 
   Map<String, dynamic> toJson() => {
