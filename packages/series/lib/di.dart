@@ -13,15 +13,48 @@ import 'package:series/domain/usecases/get_watchlist_series_status.dart';
 import 'package:series/domain/usecases/remove_series_watchlist.dart';
 import 'package:series/domain/usecases/save_series_watchlist.dart';
 import 'package:series/domain/usecases/search_series.dart';
+import 'package:series/presentation/bloc/home_series/home_series_bloc.dart';
+import 'package:series/presentation/bloc/popular_series/popular_series_bloc.dart';
+import 'package:series/presentation/bloc/search_series/search_series_bloc.dart';
+import 'package:series/presentation/bloc/series_detail/series_detail_bloc.dart';
+import 'package:series/presentation/bloc/top_rated_series/top_rated_series_bloc.dart';
+import 'package:series/presentation/bloc/watchlist_series/watchlist_series_bloc.dart';
 import 'package:series/presentation/provider/popular_series_notifier.dart';
 import 'package:series/presentation/provider/series_detail_notifier.dart';
 import 'package:series/presentation/provider/series_list_notifier.dart';
 import 'package:series/presentation/provider/series_search_notifier.dart';
-import 'package:series/presentation/provider/top_rated_series_notifier.dart';
 import 'package:series/presentation/provider/watchlist_series_notifier.dart';
 
 class SeriesInjection {
   static Future<void> initializeDependencies(GetIt locator) async {
+    // BLoC
+    locator.registerFactory(() => SearchSeriesBloc(searchSeries: locator()));
+    locator.registerFactory(
+      () => TopRatedSeriesBloc(getTopRatedSeries: locator()),
+    );
+    locator.registerFactory(
+      () => PopularSeriesBloc(getPopularSeries: locator()),
+    );
+    locator.registerFactory(
+      () => SeriesDetailBloc(
+        getSeriesDetail: locator(),
+        getSeriesRecommendations: locator(),
+        getWatchListSeriesStatus: locator(),
+        saveSeriesWatchlist: locator(),
+        removeSeriesWatchlist: locator(),
+      ),
+    );
+    locator.registerFactory(
+      () => WatchlistSeriesBloc(getWatchlistSeries: locator()),
+    );
+    locator.registerFactory(
+      () => HomeSeriesBloc(
+        getNowPlayingSeries: locator(),
+        getPopularSeries: locator(),
+        getTopRatedSeries: locator(),
+      ),
+    );
+
     // provider
     locator.registerFactory(
       () => SeriesListNotifier(
@@ -43,9 +76,6 @@ class SeriesInjection {
       () => SeriesSearchNotifier(searchSeries: locator()),
     );
     locator.registerFactory(() => PopularSeriesNotifier(locator()));
-    locator.registerFactory(
-      () => TopRatedSeriesNotifier(getTopRatedSeries: locator()),
-    );
     locator.registerFactory(
       () => WatchlistSeriesNotifier(getWatchlistSeries: locator()),
     );

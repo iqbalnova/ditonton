@@ -1,34 +1,39 @@
-import 'package:core/common/state_enum.dart';
 import 'package:core/common/utils.dart';
 import 'package:flutter/material.dart';
-import 'package:provider/provider.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:get_it/get_it.dart';
+import 'package:series/presentation/bloc/watchlist_series/watchlist_series_bloc.dart';
 
-import '../provider/watchlist_series_notifier.dart';
 import '../widgets/series_card_list.dart';
 
-class WatchlistSeriesPage extends StatefulWidget {
+class WatchlistSeriesPage extends StatelessWidget {
+  final GetIt locator;
   // ignore: constant_identifier_names
   static const ROUTE_NAME = '/watchlist-series';
 
-  const WatchlistSeriesPage({super.key});
+  const WatchlistSeriesPage({super.key, required this.locator});
 
   @override
-  WatchlistSeriesPageState createState() => WatchlistSeriesPageState();
+  Widget build(BuildContext context) {
+    return BlocProvider(
+      create: (context) => locator<WatchlistSeriesBloc>(),
+      child: WatchlistContent(),
+    );
+  }
 }
 
-class WatchlistSeriesPageState extends State<WatchlistSeriesPage>
-    with RouteAware {
+class WatchlistContent extends StatefulWidget {
+  const WatchlistContent({super.key});
+
+  @override
+  State<WatchlistContent> createState() => _WatchlistContentState();
+}
+
+class _WatchlistContentState extends State<WatchlistContent> with RouteAware {
   @override
   void initState() {
     super.initState();
-    Future.microtask(
-      () =>
-          Provider.of<WatchlistSeriesNotifier>(
-            // ignore: use_build_context_synchronously
-            context,
-            listen: false,
-          ).fetchWatchlistSeries(),
-    );
+    context.read<WatchlistSeriesBloc>().add(FetchWatchlistSeriesEvent());
   }
 
   @override
@@ -39,10 +44,7 @@ class WatchlistSeriesPageState extends State<WatchlistSeriesPage>
 
   @override
   void didPopNext() {
-    Provider.of<WatchlistSeriesNotifier>(
-      context,
-      listen: false,
-    ).fetchWatchlistSeries();
+    context.read<WatchlistSeriesBloc>().add(FetchWatchlistSeriesEvent());
   }
 
   @override
@@ -51,23 +53,28 @@ class WatchlistSeriesPageState extends State<WatchlistSeriesPage>
       appBar: AppBar(title: Text('Watchlist')),
       body: Padding(
         padding: const EdgeInsets.all(8.0),
-        child: Consumer<WatchlistSeriesNotifier>(
-          builder: (context, data, child) {
-            if (data.watchlistState == RequestState.Loading) {
+        child: BlocBuilder<WatchlistSeriesBloc, WatchlistSeriesState>(
+          builder: (context, state) {
+            if (state is WatchlistSeriesLoading) {
               return Center(child: CircularProgressIndicator());
-            } else if (data.watchlistState == RequestState.Loaded) {
+            } else if (state is WatchlistSeriesLoaded) {
+              if (state.series.isEmpty) {
+                return Center(child: Text("Watchlist kosong"));
+              }
               return ListView.builder(
+                itemCount: state.series.length,
                 itemBuilder: (context, index) {
-                  final series = data.watchlistSeries[index];
+                  final series = state.series[index];
                   return SeriesCard(series);
                 },
-                itemCount: data.watchlistSeries.length,
               );
-            } else {
+            } else if (state is WatchlistSeriesFailed) {
               return Center(
                 key: Key('error_message'),
-                child: Text(data.message),
+                child: Text(state.error),
               );
+            } else {
+              return Center(child: Text(''));
             }
           },
         ),

@@ -1,15 +1,16 @@
-import 'package:core/common/state_enum.dart';
 import 'package:flutter/material.dart';
-import 'package:provider/provider.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:get_it/get_it.dart';
+import 'package:series/presentation/bloc/popular_series/popular_series_bloc.dart';
 
-import '../provider/popular_series_notifier.dart';
 import '../widgets/series_card_list.dart';
 
 class PopularSeriesPage extends StatefulWidget {
+  final GetIt locator;
   // ignore: constant_identifier_names
   static const ROUTE_NAME = '/popular-series';
 
-  const PopularSeriesPage({super.key});
+  const PopularSeriesPage({super.key, required this.locator});
 
   @override
   PopularSeriesPageState createState() => PopularSeriesPageState();
@@ -17,43 +18,38 @@ class PopularSeriesPage extends StatefulWidget {
 
 class PopularSeriesPageState extends State<PopularSeriesPage> {
   @override
-  void initState() {
-    super.initState();
-    Future.microtask(
-      () =>
-          Provider.of<PopularSeriesNotifier>(
-            // ignore: use_build_context_synchronously
-            context,
-            listen: false,
-          ).fetchPopularSeries(),
-    );
-  }
-
-  @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(title: Text('Popular Movies')),
-      body: Padding(
-        padding: const EdgeInsets.all(8.0),
-        child: Consumer<PopularSeriesNotifier>(
-          builder: (context, data, child) {
-            if (data.state == RequestState.Loading) {
-              return Center(child: CircularProgressIndicator());
-            } else if (data.state == RequestState.Loaded) {
-              return ListView.builder(
-                itemBuilder: (context, index) {
-                  final series = data.series[index];
-                  return SeriesCard(series);
-                },
-                itemCount: data.series.length,
-              );
-            } else {
-              return Center(
-                key: Key('error_message'),
-                child: Text(data.message),
-              );
-            }
-          },
+    return BlocProvider(
+      create:
+          (context) =>
+              widget.locator<PopularSeriesBloc>()
+                ..add(FetchPopularSeriesEvent()),
+      child: Scaffold(
+        appBar: AppBar(title: Text('Popular Series')),
+        body: Padding(
+          padding: const EdgeInsets.all(8.0),
+          child: BlocBuilder<PopularSeriesBloc, PopularSeriesState>(
+            builder: (context, state) {
+              if (state is PopularSeriesLoading) {
+                return Center(child: CircularProgressIndicator());
+              } else if (state is PopularSeriesLoaded) {
+                return ListView.builder(
+                  itemBuilder: (context, index) {
+                    final series = state.series[index];
+                    return SeriesCard(series);
+                  },
+                  itemCount: state.series.length,
+                );
+              } else if (state is PopularSeriesFailed) {
+                return Center(
+                  key: Key('error_message'),
+                  child: Text(state.error),
+                );
+              } else {
+                return Center(child: Text(''));
+              }
+            },
+          ),
         ),
       ),
     );

@@ -1,15 +1,16 @@
-import 'package:core/common/state_enum.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:get_it/get_it.dart';
+import 'package:series/presentation/bloc/top_rated_series/top_rated_series_bloc.dart';
 
-import '../provider/top_rated_series_notifier.dart';
 import '../widgets/series_card_list.dart';
 import 'package:flutter/material.dart';
-import 'package:provider/provider.dart';
 
 class TopRatedSeriesPage extends StatefulWidget {
+  final GetIt locator;
   // ignore: constant_identifier_names
   static const ROUTE_NAME = '/top-rated-series';
 
-  const TopRatedSeriesPage({super.key});
+  const TopRatedSeriesPage({super.key, required this.locator});
 
   @override
   TopRatedSeriesPageState createState() => TopRatedSeriesPageState();
@@ -17,43 +18,38 @@ class TopRatedSeriesPage extends StatefulWidget {
 
 class TopRatedSeriesPageState extends State<TopRatedSeriesPage> {
   @override
-  void initState() {
-    super.initState();
-    Future.microtask(
-      () =>
-          Provider.of<TopRatedSeriesNotifier>(
-            // ignore: use_build_context_synchronously
-            context,
-            listen: false,
-          ).fetchTopRatedSeries(),
-    );
-  }
-
-  @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(title: Text('Top Rated Series')),
-      body: Padding(
-        padding: const EdgeInsets.all(8.0),
-        child: Consumer<TopRatedSeriesNotifier>(
-          builder: (context, data, child) {
-            if (data.state == RequestState.Loading) {
-              return Center(child: CircularProgressIndicator());
-            } else if (data.state == RequestState.Loaded) {
-              return ListView.builder(
-                itemBuilder: (context, index) {
-                  final series = data.series[index];
-                  return SeriesCard(series);
-                },
-                itemCount: data.series.length,
-              );
-            } else {
-              return Center(
-                key: Key('error_message'),
-                child: Text(data.message),
-              );
-            }
-          },
+    return BlocProvider(
+      create:
+          (context) =>
+              widget.locator<TopRatedSeriesBloc>()
+                ..add(FetchTopRatedSeriesEvent()),
+      child: Scaffold(
+        appBar: AppBar(title: Text('Top Rated Series')),
+        body: Padding(
+          padding: const EdgeInsets.all(8.0),
+          child: BlocBuilder<TopRatedSeriesBloc, TopRatedSeriesState>(
+            builder: (context, state) {
+              if (state is TopRatedSeriesLoading) {
+                return Center(child: CircularProgressIndicator());
+              } else if (state is TopRatedSeriesLoaded) {
+                return ListView.builder(
+                  itemBuilder: (context, index) {
+                    final series = state.series[index];
+                    return SeriesCard(series);
+                  },
+                  itemCount: state.series.length,
+                );
+              } else if (state is TopRatedSeriesFailed) {
+                return Center(
+                  key: Key('error_message'),
+                  child: Text(state.error),
+                );
+              } else {
+                return Center(child: Text(''));
+              }
+            },
+          ),
         ),
       ),
     );

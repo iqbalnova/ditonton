@@ -1,40 +1,28 @@
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:core/common/constants.dart';
-import 'package:core/common/state_enum.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:get_it/get_it.dart';
 import 'package:movie/presentation/pages/about_page.dart';
+import 'package:series/presentation/bloc/home_series/home_series_bloc.dart';
 
 import 'search_series_page.dart';
 import 'package:flutter/material.dart';
-import 'package:provider/provider.dart';
 
 import '../../domain/entities/series.dart';
-import '../provider/series_list_notifier.dart';
 import 'popular_series_page.dart';
 import 'series_detail_page.dart';
 import 'top_rated_series_page.dart';
 import 'watchlist_series_page.dart';
 
 class HomeSeriesPage extends StatefulWidget {
-  const HomeSeriesPage({super.key});
+  final GetIt locator;
+  const HomeSeriesPage({super.key, required this.locator});
 
   @override
   HomeSeriesPageState createState() => HomeSeriesPageState();
 }
 
 class HomeSeriesPageState extends State<HomeSeriesPage> {
-  @override
-  void initState() {
-    super.initState();
-    Future.microtask(
-      () =>
-          // ignore: use_build_context_synchronously
-          Provider.of<SeriesListNotifier>(context, listen: false)
-            ..fetchNowPlayingSeries()
-            ..fetchPopularSeries()
-            ..fetchTopRatedSeries(),
-    );
-  }
-
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -99,17 +87,24 @@ class HomeSeriesPageState extends State<HomeSeriesPage> {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Text('Now Playing', style: kHeading6),
-              Consumer<SeriesListNotifier>(
-                builder: (context, data, child) {
-                  final state = data.nowPlayingState;
-                  if (state == RequestState.Loading) {
-                    return Center(child: CircularProgressIndicator());
-                  } else if (state == RequestState.Loaded) {
-                    return SeriesList(data.nowPlayingSeries);
-                  } else {
-                    return Text('Failed');
-                  }
-                },
+              BlocProvider(
+                create:
+                    (context) =>
+                        widget.locator<HomeSeriesBloc>()
+                          ..add(FetchNowPlayingSeriesEvent()),
+                child: BlocBuilder<HomeSeriesBloc, HomeSeriesState>(
+                  builder: (context, state) {
+                    if (state is HomeSeriesLoading) {
+                      return Center(child: CircularProgressIndicator());
+                    } else if (state is NowPlayingSeriesLoaded) {
+                      return SeriesList(state.nowPlayingSeries);
+                    } else if (state is HomeSeriesFailed) {
+                      return Text('Failed');
+                    } else {
+                      return Text('Oops, Something went wrong');
+                    }
+                  },
+                ),
               ),
               _buildSubHeading(
                 title: 'Popular',
@@ -121,17 +116,24 @@ class HomeSeriesPageState extends State<HomeSeriesPage> {
                       ),
                     },
               ),
-              Consumer<SeriesListNotifier>(
-                builder: (context, data, child) {
-                  final state = data.popularSeriesState;
-                  if (state == RequestState.Loading) {
-                    return Center(child: CircularProgressIndicator());
-                  } else if (state == RequestState.Loaded) {
-                    return SeriesList(data.popularSeries);
-                  } else {
-                    return Text('Failed');
-                  }
-                },
+              BlocProvider(
+                create:
+                    (context) =>
+                        widget.locator<HomeSeriesBloc>()
+                          ..add(FetchPopularSeriesEvent()),
+                child: BlocBuilder<HomeSeriesBloc, HomeSeriesState>(
+                  builder: (context, state) {
+                    if (state is HomeSeriesLoading) {
+                      return Center(child: CircularProgressIndicator());
+                    } else if (state is PopularSeriesLoaded) {
+                      return SeriesList(state.popularSeries);
+                    } else if (state is HomeSeriesFailed) {
+                      return Text('Failed');
+                    } else {
+                      return Text('Oops, Something went wrong');
+                    }
+                  },
+                ),
               ),
               _buildSubHeading(
                 title: 'Top Rated',
@@ -143,17 +145,24 @@ class HomeSeriesPageState extends State<HomeSeriesPage> {
                       ),
                     },
               ),
-              Consumer<SeriesListNotifier>(
-                builder: (context, data, child) {
-                  final state = data.topRatedSeriesState;
-                  if (state == RequestState.Loading) {
-                    return Center(child: CircularProgressIndicator());
-                  } else if (state == RequestState.Loaded) {
-                    return SeriesList(data.topRatedSeries);
-                  } else {
-                    return Text('Failed');
-                  }
-                },
+              BlocProvider(
+                create:
+                    (context) =>
+                        widget.locator<HomeSeriesBloc>()
+                          ..add(FetchTopRatedSeriesEvent()),
+                child: BlocBuilder<HomeSeriesBloc, HomeSeriesState>(
+                  builder: (context, state) {
+                    if (state is HomeSeriesLoading) {
+                      return Center(child: CircularProgressIndicator());
+                    } else if (state is TopRatedSeriesLoaded) {
+                      return SeriesList(state.topRatedSeries);
+                    } else if (state is HomeSeriesFailed) {
+                      return Text('Failed');
+                    } else {
+                      return Text('Oops, Something went wrong');
+                    }
+                  },
+                ),
               ),
             ],
           ),
