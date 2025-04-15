@@ -19,11 +19,6 @@ import 'package:series/presentation/bloc/search_series/search_series_bloc.dart';
 import 'package:series/presentation/bloc/series_detail/series_detail_bloc.dart';
 import 'package:series/presentation/bloc/top_rated_series/top_rated_series_bloc.dart';
 import 'package:series/presentation/bloc/watchlist_series/watchlist_series_bloc.dart';
-import 'package:series/presentation/provider/popular_series_notifier.dart';
-import 'package:series/presentation/provider/series_detail_notifier.dart';
-import 'package:series/presentation/provider/series_list_notifier.dart';
-import 'package:series/presentation/provider/series_search_notifier.dart';
-import 'package:series/presentation/provider/watchlist_series_notifier.dart';
 
 class SeriesInjection {
   static Future<void> initializeDependencies(GetIt locator) async {
@@ -53,31 +48,6 @@ class SeriesInjection {
         getPopularSeries: locator(),
         getTopRatedSeries: locator(),
       ),
-    );
-
-    // provider
-    locator.registerFactory(
-      () => SeriesListNotifier(
-        getNowPlayingSeries: locator(),
-        getPopularSeries: locator(),
-        getTopRatedSeries: locator(),
-      ),
-    );
-    locator.registerFactory(
-      () => SeriesDetailNotifier(
-        getSeriesDetail: locator(),
-        getSeriesRecommendations: locator(),
-        getWatchListStatus: locator(),
-        saveWatchlist: locator(),
-        removeWatchlist: locator(),
-      ),
-    );
-    locator.registerFactory(
-      () => SeriesSearchNotifier(searchSeries: locator()),
-    );
-    locator.registerFactory(() => PopularSeriesNotifier(locator()));
-    locator.registerFactory(
-      () => WatchlistSeriesNotifier(getWatchlistSeries: locator()),
     );
 
     // use case

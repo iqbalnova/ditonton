@@ -13,39 +13,40 @@ import 'package:movie/domain/usecases/get_watchlist_status.dart';
 import 'package:movie/domain/usecases/remove_watchlist.dart';
 import 'package:movie/domain/usecases/save_watchlist.dart';
 import 'package:movie/domain/usecases/search_movies.dart';
-import 'package:movie/presentation/provider/movie_detail_notifier.dart';
-import 'package:movie/presentation/provider/movie_list_notifier.dart';
-import 'package:movie/presentation/provider/movie_search_notifier.dart';
-import 'package:movie/presentation/provider/popular_movies_notifier.dart';
-import 'package:movie/presentation/provider/top_rated_movies_notifier.dart';
-import 'package:movie/presentation/provider/watchlist_movie_notifier.dart';
+import 'package:movie/presentation/bloc/search_movie/search_movie_bloc.dart';
+import 'package:movie/presentation/bloc/top_rated_movie/top_rated_movie_bloc.dart';
+
+import 'presentation/bloc/home_movie/home_movie_bloc.dart';
+import 'presentation/bloc/movie_detail/movie_detail_bloc.dart';
+import 'presentation/bloc/popular_movie/popular_movie_bloc.dart';
+import 'presentation/bloc/watchlist_movie/watchlist_movie_bloc.dart';
 
 class MovieInjection {
   static Future<void> initializeDependencies(GetIt locator) async {
-    // provider
+    // BLoC
+    locator.registerFactory(() => SearchMovieBloc(searchMovie: locator()));
     locator.registerFactory(
-      () => MovieListNotifier(
-        getNowPlayingMovies: locator(),
-        getPopularMovies: locator(),
-        getTopRatedMovies: locator(),
-      ),
+      () => TopRatedMovieBloc(getTopRatedMovie: locator()),
     );
+    locator.registerFactory(() => PopularMovieBloc(getPopularMovie: locator()));
     locator.registerFactory(
-      () => MovieDetailNotifier(
+      () => MovieDetailBloc(
         getMovieDetail: locator(),
         getMovieRecommendations: locator(),
-        getWatchListStatus: locator(),
-        saveWatchlist: locator(),
-        removeWatchlist: locator(),
+        getWatchListMovieStatus: locator(),
+        saveMovieWatchlist: locator(),
+        removeMovieWatchlist: locator(),
       ),
     );
-    locator.registerFactory(() => MovieSearchNotifier(searchMovies: locator()));
-    locator.registerFactory(() => PopularMoviesNotifier(locator()));
     locator.registerFactory(
-      () => TopRatedMoviesNotifier(getTopRatedMovies: locator()),
+      () => WatchlistMovieBloc(getWatchlistMovie: locator()),
     );
     locator.registerFactory(
-      () => WatchlistMovieNotifier(getWatchlistMovies: locator()),
+      () => HomeMovieBloc(
+        getNowPlayingMovie: locator(),
+        getPopularMovie: locator(),
+        getTopRatedMovie: locator(),
+      ),
     );
 
     // use case

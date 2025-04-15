@@ -1,34 +1,41 @@
-import 'package:core/common/state_enum.dart';
 import 'package:core/common/utils.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:get_it/get_it.dart';
 
-import '../provider/watchlist_movie_notifier.dart';
-import '../widgets/movie_card_list.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
-class WatchlistMoviesPage extends StatefulWidget {
+import '../bloc/watchlist_movie/watchlist_movie_bloc.dart';
+import '../widgets/movie_card_list.dart';
+
+class WatchlistMoviesPage extends StatelessWidget {
+  final GetIt locator;
   // ignore: constant_identifier_names
   static const ROUTE_NAME = '/watchlist-movie';
 
-  const WatchlistMoviesPage({super.key});
+  const WatchlistMoviesPage({super.key, required this.locator});
 
   @override
-  WatchlistMoviesPageState createState() => WatchlistMoviesPageState();
+  Widget build(BuildContext context) {
+    return BlocProvider(
+      create: (context) => locator<WatchlistMovieBloc>(),
+      child: WatchlistContent(),
+    );
+  }
 }
 
-class WatchlistMoviesPageState extends State<WatchlistMoviesPage>
-    with RouteAware {
+class WatchlistContent extends StatefulWidget {
+  const WatchlistContent({super.key});
+
+  @override
+  State<WatchlistContent> createState() => _WatchlistContentState();
+}
+
+class _WatchlistContentState extends State<WatchlistContent> with RouteAware {
   @override
   void initState() {
     super.initState();
-    Future.microtask(
-      () =>
-          Provider.of<WatchlistMovieNotifier>(
-            // ignore: use_build_context_synchronously
-            context,
-            listen: false,
-          ).fetchWatchlistMovies(),
-    );
+    context.read<WatchlistMovieBloc>().add(FetchWatchlistMovieEvent());
   }
 
   @override
@@ -39,10 +46,7 @@ class WatchlistMoviesPageState extends State<WatchlistMoviesPage>
 
   @override
   void didPopNext() {
-    Provider.of<WatchlistMovieNotifier>(
-      context,
-      listen: false,
-    ).fetchWatchlistMovies();
+    context.read<WatchlistMovieBloc>().add(FetchWatchlistMovieEvent());
   }
 
   @override
@@ -51,23 +55,28 @@ class WatchlistMoviesPageState extends State<WatchlistMoviesPage>
       appBar: AppBar(title: Text('Watchlist')),
       body: Padding(
         padding: const EdgeInsets.all(8.0),
-        child: Consumer<WatchlistMovieNotifier>(
-          builder: (context, data, child) {
-            if (data.watchlistState == RequestState.Loading) {
+        child: BlocBuilder<WatchlistMovieBloc, WatchlistMovieState>(
+          builder: (context, state) {
+            if (state is WatchlistMovieLoading) {
               return Center(child: CircularProgressIndicator());
-            } else if (data.watchlistState == RequestState.Loaded) {
+            } else if (state is WatchlistMovieLoaded) {
+              if (state.movie.isEmpty) {
+                return Center(child: Text("Watchlist kosong"));
+              }
               return ListView.builder(
+                itemCount: state.movie.length,
                 itemBuilder: (context, index) {
-                  final movie = data.watchlistMovies[index];
+                  final movie = state.movie[index];
                   return MovieCard(movie);
                 },
-                itemCount: data.watchlistMovies.length,
               );
-            } else {
+            } else if (state is WatchlistMovieFailed) {
               return Center(
                 key: Key('error_message'),
-                child: Text(data.message),
+                child: Text(state.error),
               );
+            } else {
+              return Center(child: Text(''));
             }
           },
         ),
