@@ -1,0 +1,188 @@
+definitions:
+  environment:
+    groups:
+      - ios
+      - android
+      - firebase
+  scripts:
+    - &ios_initialize_keychain
+      name: Set up keychain to be used for codesigning using Codemagic CLI 'keychain' command
+      script: |
+        keychain initialize
+    - &ios_automatic_fetch_adhoc
+      name: Fetch signing files
+      script: |
+        app-store-connect fetch-signing-files $BUNDLE_ID --type IOS_APP_ADHOC --create
+    - &ios_automatic_fetch
+      name: Fetch signing files
+      script: |
+        app-store-connect fetch-signing-files $BUNDLE_ID --type IOS_APP_STORE --create
+    - &ios_use_default_keychain
+      name: Use system default keychain
+      script: |
+        keychain add-certificates
+    - &ios_set_signing_to_xcode
+      name: Set up code signing settings on Xcode project
+      script: |
+        xcode-project use-profiles
+    - &ios_flutter_build_dev
+      name: Build ipa for distribution
+      script: |
+        cd apps/frontend
+        flutter build ios --target=lib/main.dart
+        cd ios
+        xcode-project build-ipa --workspace "$XCODE_WORKSPACE"
+    - &android_set_key_properties
+      name: Set up key properties
+      script: |
+        echo $FCI_KEYSTORE | base64 --decode > $FCI_KEYSTORE_PATH
+        cat >> "$FCI_BUILD_DIR/apps/frontend/android/key.properties" <<EOF
+        storePassword=$FCI_KEYSTORE_PASSWORD
+        keyPassword=$FCI_KEY_PASSWORD
+        keyAlias=$FCI_KEY_ALIAS
+        storeFile=$FCI_KEYSTORE_PATH
+        EOF
+    - &android_set_local_properties
+      name: Set up local.properties
+      script: |
+        echo "flutter.sdk=$HOME/programs/flutter" > "$FCI_BUILD_DIR/apps/frontend/android/local.properties"
+    - &android_flutter_build_dev
+      name: Build apk for distribution
+      script: |
+        cd apps/frontend
+        flutter pub get
+        flutter build apk --release --target=lib/main.dart
+  publishing:
+    - &firebase_app_distribution_ios
+      firebase:
+        firebase_token: $FIREBASE_TOKEN
+        ios:
+          app_id: $FIREBASE_IOS_APP_ID
+          groups: 
+            - iOS
+    - &firebase_app_distribution_android
+      firebase:
+        firebase_token: $FIREBASE_TOKEN
+        android:
+          app_id: $FIREBASE_ANDROID_APP_ID
+          groups:
+            - android
+  artifacts:
+    - &ipa apps/frontend/ios/build/ios/ipa/*.ipa
+    - &dsym $HOME/Library/Developer/Xcode/DerivedData/**/Build/**/*.dSYM
+    - &apk apps/frontend/build/**/outputs/**/*.apk
+    - &aab apps/frontend/build/**/outputs/**/*.aab
+workflows:
+  ci:
+    name: CI
+    # Setting the timeout for a build to 15 minutes.
+    max_build_duration: 15
+    environment:
+      # Using the latest Flutter version.
+      flutter: stable
+    when:
+      changeset:
+        includes:
+          # Only run the CI when a file in one of the following directories
+          # changed.
+          - "apps/**"
+          - "packages/**"
+          - "codemagic.yaml"
+        excludes:
+          # Don't run the CI when only .md files changed.
+          - "**/*.md"
+    # This workflow should trigger when a new pull request opens or updates.
+    triggering:
+      events:
+        - pull_request
+    scripts:
+      - name: Add Dart SDK to PATH
+        script: |
+          echo PATH="$PATH":"$FLUTTER_ROOT/.pub-cache/bin" >> $CM_ENV
+          echo PATH="$PATH":"$FLUTTER_ROOT/bin" >> $CM_ENV
+      - name: Melos Bootstrap
+        script: |
+          dart pub global activate melos
+          melos bootstrap
+      - name: Run Analyze
+        script: melos run analyze
+
+      - name: Run Format
+        script: melos run format
+
+      - name: Run Tests
+        script: |
+          melos run test
+          
+          # Upload results of failed golden tests if test command failed.
+          if [ $? -ne 0 ]; then
+            # Finds all "failures" folders and copies them to the export
+            # directory. Therefore, we are able to view the results of the
+            # failed golden tests.
+            #
+            # The command will use the exit code 0 (success) even when there are
+            # no failures folders.
+            find * -path '**/failures' -execdir bash -c "cp -r failures $FCI_EXPORT_DIR" \;
+            
+            # Because we caught the exit code of the test command, we need to
+            # set manually again.
+            exit 1
+          fi
+  
+  ios-build-firebase:
+    name: ios-build-firebase
+    max_build_duration: 60
+    environment:
+      groups:
+        - firebase
+        - ios
+      vars:
+        XCODE_WORKSPACE: "Runner.xcworkspace"
+        xcode: latest
+        cocoapods: default
+      flutter: stable
+      cocoapods: default
+    triggering:
+      events:
+        - tag
+      branch_patterns:
+        - pattern: "main"
+          include: true
+          source: true
+    scripts:
+      - *ios_initialize_keychain
+      - *ios_automatic_fetch_adhoc
+      - *ios_use_default_keychain
+      - *ios_set_signing_to_xcode
+      - *ios_flutter_build_dev
+    artifacts:
+      - *ipa
+      - *dsym
+    #publishing: *firebase_app_distribution_ios
+  android-build-firebase:
+    name: android-build-firebase
+    max_build_duration: 60
+    environment:
+      groups:
+        - firebase
+        - android
+      flutter: stable
+    cache:
+      cache_paths:
+        - $FLUTTER_ROOT/.pub-cache
+        - $HOME/.gradle/caches
+    triggering:
+      events:
+        - tag
+      branch_patterns:
+        - pattern: "main"
+          include: true
+          source: true
+    scripts:
+      - *android_set_key_properties
+      - *android_set_local_properties
+      - *android_flutter_build_dev
+    artifacts:
+      - *apk
+      - *aab
+    #publishing: *firebase_app_distribution_android
