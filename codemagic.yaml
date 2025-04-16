@@ -1,14 +1,37 @@
 workflows:
-  melos_test_workflow:
-    name: Run tests with Melos
+  melos_ci_workflow:
+    name: Full CI for Flutter Modular Project with Melos
     environment:
       flutter: stable
+    cache:
+      cache_paths:
+        - .dart_tool/
+        - .pub-cache/
+        - packages/**/.dart_tool/
     scripts:
-      - name: Activate melos globally
+      - name: Activate Melos globally
         script: flutter pub global activate melos
-      - name: Get dependencies using melos
+
+      - name: Bootstrap dependencies with Melos
         script: melos bootstrap
-      - name: Run tests with melos
+
+      - name: Run static analysis
+        script: melos run analyze
+
+      - name: Format & auto-fix code
+        script: melos run format
+
+      - name: Run unit & widget tests
         script: melos run test
+
+      - name: Build release APK
+        script: flutter build apk --release
+
     artifacts:
+      - build/app/outputs/flutter-apk/app-release.apk
       - coverage/**/lcov.info
+
+    publishing:
+      email:
+        recipients:
+          - iqbalnova707@gmail.com
