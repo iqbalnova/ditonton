@@ -1,0 +1,6 @@
+# melos_managed_dependency_overrides: core,series
+dependency_overrides:
+  core:
+    path: ..\\core
+  series:
+    path: ..\\series

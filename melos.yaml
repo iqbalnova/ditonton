@@ -1,0 +1,37 @@
+name: ditonton-iqbalnova
+
+packages:
+  - packages/*
+
+scripts:
+  analyze:
+    run: melos exec -- flutter analyze .
+    description: Analyze all packages using flutter analyze
+
+  clean:
+    run: melos exec -- flutter clean
+    description: Clean all packages
+
+  pubget:
+    run: melos exec -- flutter pub get
+    description: Get dependencies in all packages
+
+  update-pub:
+    run: melos exec -- flutter pub upgrade --major-versions
+    description: Upgrade all packages dependencies to latest major versions
+
+  test:
+    run: |
+      melos exec --dir-exists="test" --fail-fast -- \
+        flutter test --no-pub --coverage
+    description: Run all Flutter tests in packages that have a "test/" folder
+
+  generate:
+    run: melos exec -- dart run build_runner build --delete-conflicting-outputs
+    description: Run code generation (build_runner) in all packages
+
+  format:
+    run: |
+      melos exec -- flutter format . &&
+      melos exec -- dart fix --apply
+    description: Format and fix all packages

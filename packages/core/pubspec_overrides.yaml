@@ -1,0 +1,6 @@
+# melos_managed_dependency_overrides: movie,series
+dependency_overrides:
+  movie:
+    path: ..\\movie
+  series:
+    path: ..\\series

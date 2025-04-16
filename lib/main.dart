@@ -1,5 +1,6 @@
 import 'package:core/common/constants.dart';
 import 'package:core/common/utils.dart';
+import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:movie/presentation/pages/about_page.dart';
@@ -15,11 +16,19 @@ import 'package:series/presentation/pages/search_series_page.dart';
 import 'package:series/presentation/pages/series_detail_page.dart';
 import 'package:series/presentation/pages/top_rated_series_page.dart';
 import 'package:series/presentation/pages/watchlist_series_page.dart';
+
+import 'firebase_options.dart';
 import 'injection.dart' as di;
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
+
+  await Firebase.initializeApp(
+    options: DefaultFirebaseOptions.currentPlatform,
+  );
+
   await di.init();
+
   runApp(MyApp());
 }
 

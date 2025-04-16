@@ -1,0 +1,14 @@
+workflows:
+  melos_test_workflow:
+    name: Run tests with Melos
+    environment:
+      flutter: stable
+    scripts:
+      - name: Activate melos globally
+        script: flutter pub global activate melos
+      - name: Get dependencies using melos
+        script: melos bootstrap
+      - name: Run tests with melos
+        script: melos run test
+    artifacts:
+      - coverage/**/lcov.info

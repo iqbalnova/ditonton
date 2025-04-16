@@ -29,12 +29,16 @@ dependencies:
     path: packages/movie
   series:
     path: packages/series
+  firebase_core: ^3.13.0
+  firebase_analytics: ^11.4.5
+  firebase_crashlytics: ^4.3.5
 
 dev_dependencies:
   mockito: ^5.0.8
   build_runner: ^2.0.4
   flutter_test:
     sdk: flutter
+  melos: ^6.3.2
 
 # For information on the generic Dart part of this file, see the
 # following page: https://dart.dev/tools/pub/pubspec

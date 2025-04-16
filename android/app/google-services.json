@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "356536676623",
+    "project_id": "ditonton-iqbalnova",
+    "storage_bucket": "ditonton-iqbalnova.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:356536676623:android:f535047ef80d6292d08e7a",
+        "android_client_info": {
+          "package_name": "com.dicoding.ditonton"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyBScojRXhEZe37zSmoFHvjtjwbpSxHCzss"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
