@@ -3,6 +3,7 @@ import 'package:core/common/constants.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:get_it/get_it.dart';
 import 'package:movie/presentation/pages/about_page.dart';
+import 'package:movie/presentation/pages/watchlist_page.dart';
 import 'package:series/presentation/bloc/home_series/home_series_bloc.dart';
 
 import 'search_series_page.dart';
@@ -12,7 +13,6 @@ import '../../domain/entities/series.dart';
 import 'popular_series_page.dart';
 import 'series_detail_page.dart';
 import 'top_rated_series_page.dart';
-import 'watchlist_series_page.dart';
 
 class HomeSeriesPage extends StatefulWidget {
   final GetIt locator;
@@ -56,7 +56,7 @@ class HomeSeriesPageState extends State<HomeSeriesPage> {
               leading: Icon(Icons.save_alt),
               title: Text('Watchlist'),
               onTap: () {
-                Navigator.pushNamed(context, WatchlistSeriesPage.ROUTE_NAME);
+                Navigator.pushNamed(context, WatchlistPage.ROUTE_NAME);
               },
             ),
             ListTile(

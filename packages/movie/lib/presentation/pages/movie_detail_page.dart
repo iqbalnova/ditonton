@@ -77,7 +77,10 @@ class _DetailContentState extends State<DetailContent> {
     return Stack(
       children: [
         CachedNetworkImage(
-          imageUrl: "https://image.tmdb.org/t/p/w500${widget.movie.posterPath}",
+          imageUrl:
+              widget.movie.posterPath == null
+                  ? 'https://media.istockphoto.com/id/1222357475/vector/image-preview-icon-picture-placeholder-for-website-or-ui-ux-design-vector-illustration.jpg?s=612x612&w=0&k=20&c=KuCo-dRBYV7nz2gbk4J9w1WtTAgpTdznHu55W9FjimE='
+                  : '$BASE_IMAGE_URL${widget.movie.posterPath}',
           width: screenWidth,
           placeholder:
               (context, url) => Center(child: CircularProgressIndicator()),
@@ -105,62 +108,81 @@ class _DetailContentState extends State<DetailContent> {
                           children: [
                             Text(widget.movie.originalTitle, style: kHeading5),
                             const SizedBox(height: 8),
-                            BlocListener<MovieDetailBloc, MovieDetailState>(
-                              listener: (context, state) {
-                                if (state is WatchlistChangeSuccess) {
-                                  if (state.message ==
-                                          MovieDetailBloc
-                                              .watchlistAddSuccessMessage ||
-                                      state.message ==
-                                          MovieDetailBloc
-                                              .watchlistRemoveSuccessMessage) {
-                                    ScaffoldMessenger.of(context).showSnackBar(
-                                      SnackBar(content: Text(state.message)),
-                                    );
-                                  } else {
-                                    showDialog(
-                                      context: context,
-                                      builder: (context) {
-                                        return AlertDialog(
-                                          content: Text(state.message),
-                                        );
-                                      },
-                                    );
-                                  }
+                            BlocBuilder<MovieDetailBloc, MovieDetailState>(
+                              buildWhen:
+                                  (previous, current) =>
+                                      current is WatchlistStatusLoaded ||
+                                      current is WatchlistChangeSuccess,
+                              builder: (context, watchlistState) {
+                                bool isAddedWatchlist = false;
+
+                                if (watchlistState is WatchlistStatusLoaded) {
+                                  isAddedWatchlist =
+                                      watchlistState.isAddedWatchlist;
                                 }
 
-                                if (state is WatchlistStatusLoaded) {
-                                  setState(() {
-                                    isAddedWatchlist = state.isAddedWatchlist;
-                                  });
-                                }
+                                return BlocListener<
+                                  MovieDetailBloc,
+                                  MovieDetailState
+                                >(
+                                  listenWhen:
+                                      (previous, current) =>
+                                          current is WatchlistChangeSuccess,
+                                  listener: (context, state) {
+                                    if (state is WatchlistChangeSuccess) {
+                                      if (state.message ==
+                                              MovieDetailBloc
+                                                  .watchlistAddSuccessMessage ||
+                                          state.message ==
+                                              MovieDetailBloc
+                                                  .watchlistRemoveSuccessMessage) {
+                                        ScaffoldMessenger.of(
+                                          context,
+                                        ).showSnackBar(
+                                          SnackBar(
+                                            content: Text(state.message),
+                                          ),
+                                        );
+                                      } else {
+                                        showDialog(
+                                          context: context,
+                                          builder: (context) {
+                                            return AlertDialog(
+                                              content: Text(state.message),
+                                            );
+                                          },
+                                        );
+                                      }
+                                    }
+                                  },
+                                  child: FilledButton(
+                                    onPressed: () {
+                                      if (!isAddedWatchlist) {
+                                        context.read<MovieDetailBloc>().add(
+                                          SaveWatchlistMovieEvent(
+                                            movie: widget.movie,
+                                          ),
+                                        );
+                                      } else {
+                                        context.read<MovieDetailBloc>().add(
+                                          RemoveWatchlistMovieEvent(
+                                            movie: widget.movie,
+                                          ),
+                                        );
+                                      }
+                                    },
+                                    child: Row(
+                                      mainAxisSize: MainAxisSize.min,
+                                      children: [
+                                        isAddedWatchlist
+                                            ? Icon(Icons.check)
+                                            : Icon(Icons.add),
+                                        Text(' Watchlist'),
+                                      ],
+                                    ),
+                                  ),
+                                );
                               },
-                              child: FilledButton(
-                                onPressed: () {
-                                  if (!isAddedWatchlist) {
-                                    context.read<MovieDetailBloc>().add(
-                                      SaveWatchlistMovieEvent(
-                                        movie: widget.movie,
-                                      ),
-                                    );
-                                  } else {
-                                    context.read<MovieDetailBloc>().add(
-                                      RemoveWatchlistMovieEvent(
-                                        movie: widget.movie,
-                                      ),
-                                    );
-                                  }
-                                },
-                                child: Row(
-                                  mainAxisSize: MainAxisSize.min,
-                                  children: [
-                                    isAddedWatchlist
-                                        ? Icon(Icons.check)
-                                        : Icon(Icons.add),
-                                    Text(' Watchlist'),
-                                  ],
-                                ),
-                              ),
                             ),
                             const SizedBox(height: 8),
                             Text(_showGenres(widget.movie.genres)),

@@ -62,7 +62,6 @@ class DetailContent extends StatefulWidget {
 }
 
 class _DetailContentState extends State<DetailContent> {
-  bool isAddedWatchlist = false;
   @override
   void initState() {
     super.initState();
@@ -109,62 +108,81 @@ class _DetailContentState extends State<DetailContent> {
                           children: [
                             Text(widget.series.name, style: kHeading5),
                             const SizedBox(height: 8),
-                            BlocListener<SeriesDetailBloc, SeriesDetailState>(
-                              listener: (context, state) {
-                                if (state is WatchlistChangeSuccess) {
-                                  if (state.message ==
-                                          SeriesDetailBloc
-                                              .watchlistAddSuccessMessage ||
-                                      state.message ==
-                                          SeriesDetailBloc
-                                              .watchlistRemoveSuccessMessage) {
-                                    ScaffoldMessenger.of(context).showSnackBar(
-                                      SnackBar(content: Text(state.message)),
-                                    );
-                                  } else {
-                                    showDialog(
-                                      context: context,
-                                      builder: (context) {
-                                        return AlertDialog(
-                                          content: Text(state.message),
-                                        );
-                                      },
-                                    );
-                                  }
+                            BlocBuilder<SeriesDetailBloc, SeriesDetailState>(
+                              buildWhen:
+                                  (previous, current) =>
+                                      current is WatchlistStatusLoaded ||
+                                      current is WatchlistChangeSuccess,
+                              builder: (context, watchlistState) {
+                                bool isAddedWatchlist = false;
+
+                                if (watchlistState is WatchlistStatusLoaded) {
+                                  isAddedWatchlist =
+                                      watchlistState.isAddedWatchlist;
                                 }
 
-                                if (state is WatchlistStatusLoaded) {
-                                  setState(() {
-                                    isAddedWatchlist = state.isAddedWatchlist;
-                                  });
-                                }
+                                return BlocListener<
+                                  SeriesDetailBloc,
+                                  SeriesDetailState
+                                >(
+                                  listenWhen:
+                                      (previous, current) =>
+                                          current is WatchlistChangeSuccess,
+                                  listener: (context, state) {
+                                    if (state is WatchlistChangeSuccess) {
+                                      if (state.message ==
+                                              SeriesDetailBloc
+                                                  .watchlistAddSuccessMessage ||
+                                          state.message ==
+                                              SeriesDetailBloc
+                                                  .watchlistRemoveSuccessMessage) {
+                                        ScaffoldMessenger.of(
+                                          context,
+                                        ).showSnackBar(
+                                          SnackBar(
+                                            content: Text(state.message),
+                                          ),
+                                        );
+                                      } else {
+                                        showDialog(
+                                          context: context,
+                                          builder: (context) {
+                                            return AlertDialog(
+                                              content: Text(state.message),
+                                            );
+                                          },
+                                        );
+                                      }
+                                    }
+                                  },
+                                  child: FilledButton(
+                                    onPressed: () {
+                                      if (!isAddedWatchlist) {
+                                        context.read<SeriesDetailBloc>().add(
+                                          SaveWatchlistSeriesEvent(
+                                            serie: widget.series,
+                                          ),
+                                        );
+                                      } else {
+                                        context.read<SeriesDetailBloc>().add(
+                                          RemoveWatchlistSeriesEvent(
+                                            serie: widget.series,
+                                          ),
+                                        );
+                                      }
+                                    },
+                                    child: Row(
+                                      mainAxisSize: MainAxisSize.min,
+                                      children: [
+                                        isAddedWatchlist
+                                            ? Icon(Icons.check)
+                                            : Icon(Icons.add),
+                                        Text(' Watchlist'),
+                                      ],
+                                    ),
+                                  ),
+                                );
                               },
-                              child: FilledButton(
-                                onPressed: () {
-                                  if (!isAddedWatchlist) {
-                                    context.read<SeriesDetailBloc>().add(
-                                      SaveWatchlistSeriesEvent(
-                                        serie: widget.series,
-                                      ),
-                                    );
-                                  } else {
-                                    context.read<SeriesDetailBloc>().add(
-                                      RemoveWatchlistSeriesEvent(
-                                        serie: widget.series,
-                                      ),
-                                    );
-                                  }
-                                },
-                                child: Row(
-                                  mainAxisSize: MainAxisSize.min,
-                                  children: [
-                                    isAddedWatchlist
-                                        ? Icon(Icons.check)
-                                        : Icon(Icons.add),
-                                    Text(' Watchlist'),
-                                  ],
-                                ),
-                              ),
                             ),
                             const SizedBox(height: 8),
                             Text(_showGenres(widget.series.genres)),

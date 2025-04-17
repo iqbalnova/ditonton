@@ -9,13 +9,12 @@ import 'package:movie/presentation/pages/movie_detail_page.dart';
 import 'package:movie/presentation/pages/popular_movies_page.dart';
 import 'package:movie/presentation/pages/search_page.dart';
 import 'package:movie/presentation/pages/top_rated_movies_page.dart';
-import 'package:movie/presentation/pages/watchlist_movies_page.dart';
+import 'package:movie/presentation/pages/watchlist_page.dart';
 import 'package:series/presentation/pages/home_series_page.dart';
 import 'package:series/presentation/pages/popular_series_page.dart';
 import 'package:series/presentation/pages/search_series_page.dart';
 import 'package:series/presentation/pages/series_detail_page.dart';
 import 'package:series/presentation/pages/top_rated_series_page.dart';
-import 'package:series/presentation/pages/watchlist_series_page.dart';
 
 import 'firebase_options.dart';
 import 'injection.dart' as di;
@@ -84,12 +83,10 @@ class MyApp extends StatelessWidget {
           case SearchSeriesPage.ROUTE_NAME:
             return CupertinoPageRoute(
                 builder: (_) => SearchSeriesPage(locator: di.locator));
-          case WatchlistMoviesPage.ROUTE_NAME:
+          case WatchlistPage.ROUTE_NAME:
             return MaterialPageRoute(
-                builder: (_) => WatchlistMoviesPage(locator: di.locator));
-          case WatchlistSeriesPage.ROUTE_NAME:
-            return MaterialPageRoute(
-                builder: (_) => WatchlistSeriesPage(locator: di.locator));
+                builder: (_) => WatchlistPage(locator: di.locator));
+
           case AboutPage.ROUTE_NAME:
             return MaterialPageRoute(builder: (_) => AboutPage());
 

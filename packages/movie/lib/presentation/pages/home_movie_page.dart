@@ -2,6 +2,7 @@ import 'package:cached_network_image/cached_network_image.dart';
 import 'package:core/common/constants.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:get_it/get_it.dart';
+import 'package:movie/presentation/pages/watchlist_page.dart';
 import '../../domain/entities/movie.dart';
 import '../bloc/home_movie/home_movie_bloc.dart';
 import 'about_page.dart';
@@ -9,7 +10,6 @@ import 'movie_detail_page.dart';
 import 'popular_movies_page.dart';
 import 'search_page.dart';
 import 'top_rated_movies_page.dart';
-import 'watchlist_movies_page.dart';
 import 'package:flutter/material.dart';
 
 class HomeMoviePage extends StatefulWidget {
@@ -54,7 +54,7 @@ class HomeMoviePageState extends State<HomeMoviePage> {
               leading: Icon(Icons.save_alt),
               title: Text('Watchlist'),
               onTap: () {
-                Navigator.pushNamed(context, WatchlistMoviesPage.ROUTE_NAME);
+                Navigator.pushNamed(context, WatchlistPage.ROUTE_NAME);
               },
             ),
             ListTile(
